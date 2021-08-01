@@ -1,10 +1,12 @@
-import { GetStaticProps } from "next";
-import { getSession } from "next-auth/client";
+import { GetStaticPaths, GetStaticProps } from "next";
+import { useSession } from "next-auth/client";
 import { getPrismicClient } from "../../../services/prismic";
 import { RichText } from "prismic-dom";
 import Head from "next/head";
 import styles from "../post.module.scss";
-import { Link } from "next/link";
+import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 interface PostsPreviewProps {
   post: {
@@ -16,6 +18,15 @@ interface PostsPreviewProps {
 }
 
 const Post = ({ post }: PostsPreviewProps) => {
+  const [session] = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session?.activeSubscription) {
+      router.push(`/posts/${post.slug}`);
+    }
+  }, [session]);
+
   return (
     <>
       <Head>
@@ -31,8 +42,8 @@ const Post = ({ post }: PostsPreviewProps) => {
           />
           <div className={styles.continueReading}>
             Wanna continue reading?
-            <Link>
-              <a href=""></a>
+            <Link href="/">
+              <a href="">Subscribe now! 🤗 </a>
             </Link>
           </div>
         </article>
@@ -43,7 +54,7 @@ const Post = ({ post }: PostsPreviewProps) => {
 
 export default Post;
 
-export const getStaticPaths = () => {
+export const getStaticPaths: GetStaticPaths = async () => {
   return {
     paths: [],
     fallback: "blocking",
@@ -74,5 +85,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     props: {
       post,
     },
+    redirect: 60 * 30,
   };
 };
